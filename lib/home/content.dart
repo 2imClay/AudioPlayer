@@ -125,6 +125,10 @@ class ContentPageState extends State<ContentPage>
       await audioPlayer.pause();
     }
   }
+  Future<void> toggleStop() async {
+      await audioPlayer.stop();
+      isStop = true;
+  }
 
   @override
   void dispose() {
@@ -158,7 +162,7 @@ class ContentPageState extends State<ContentPage>
                 setState(() {
                   isStop = false;
                   setAudio(note);
-                  audioPlayer.play(AssetSource(note));
+                  audioPlayer.play(AssetSource('musics/'+note));
                 });
               },
               icon: Icon(
@@ -591,8 +595,7 @@ class ContentPageState extends State<ContentPage>
                     iconSize: 50,
                     onPressed: () {
                       setState(() {
-                        isStop = !isStop;
-                        audioPlayer.stop();
+                        toggleStop();
                       });
                     },
                     icon: Icon(

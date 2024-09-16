@@ -33,6 +33,7 @@ class ContentPageState extends State<ContentPage>
   final audioPlayer = AudioPlayer();
   bool isPlay = false;
   bool isStop = true;
+  int currentIndex = 0;
 
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
@@ -61,12 +62,28 @@ class ContentPageState extends State<ContentPage>
   }
 
   Future setAudio(String musicName) async {
-    audioPlayer.setReleaseMode(ReleaseMode.loop);
 
     String path = 'musics/$musicName';
     await audioPlayer.setSource(AssetSource(path));
-    await audioPlayer.play(AssetSource(path));
   }
+
+  void playMusic(int index) {
+    String musicPath = 'musics/' + musicList[index];
+    audioPlayer.play(AssetSource(musicPath));
+    setState(() {
+      currentIndex = index;
+    });
+  }
+  void playNextSong() {
+    int nextIndex = currentIndex + 1;
+    if(nextIndex < musicList.length){
+      playMusic(nextIndex);
+    } else {
+      audioPlayer.stop();
+      print('Đã phát hết nhạc trong danh sách');
+    }
+  }
+
 
   @override
   void initState() {
@@ -87,13 +104,14 @@ class ContentPageState extends State<ContentPage>
       print('Current position: $p');
       setState(() => position = p);
     });
-  }
-
-  Future<void> chooseMusic(String musicName) async {
-    setAudio(musicName);
-    if (!isPlay) {
-      await audioPlayer.resume();
-    }
+    audioPlayer.onPlayerComplete.listen((event) {
+      if(currentIndex == musicList.length-1){
+        currentIndex=0;
+        playMusic(currentIndex);
+      } else {
+        playNextSong();
+      }
+    });
   }
 
   Future<void> togglePlay() async {
@@ -139,7 +157,8 @@ class ContentPageState extends State<ContentPage>
               onPressed: () {
                 setState(() {
                   isStop = false;
-                  chooseMusic(note);
+                  setAudio(note);
+                  audioPlayer.play(AssetSource(note));
                 });
               },
               icon: Icon(
@@ -166,7 +185,8 @@ class ContentPageState extends State<ContentPage>
                   onTap: () {
                     setState(() {
                       isStop = false;
-                      chooseMusic(note);
+                      setAudio(note);
+                      playMusic(index);
                     });
                   },
                   trailing: itemContent(note),
@@ -548,6 +568,7 @@ class ContentPageState extends State<ContentPage>
                         isStop = false;
                         togglePlay();
                       });
+
                     },
                     icon: Icon(
                       Icons.play_arrow,
